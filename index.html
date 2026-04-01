@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Expense Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      padding: 10px;
+      margin: 5px;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+    }
+
+    li {
+      background: white;
+      margin: 5px 0;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .dark {
+      background: #222;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>💸 Expense Tracker</h1>
+
+<h2 id="total">Total: Rp 0</h2>
+
+<form id="form">
+  <input type="text" id="name" placeholder="Item Name" required>
+  <input type="number" id="amount" placeholder="Amount" required>
+  
+  <select id="category">
+    <option>Food</option>
+    <option>Transport</option>
+    <option>Fun</option>
+  </select>
+
+  <button type="submit">Add</button>
+</form>
+
+<h3>Transactions</h3>
+<ul id="list"></ul>
+
+<canvas id="chart"></canvas>
+
+<script>
+let data = JSON.parse(localStorage.getItem("data")) || [];
+
+const form = document.getElementById("form");
+const list = document.getElementById("list");
+const total = document.getElementById("total");
+
+form.addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const amount = parseInt(document.getElementById("amount").value);
+  const category = document.getElementById("category").value;
+
+  data.push({ name, amount, category });
+  localStorage.setItem("data", JSON.stringify(data));
+
+  tampilkan();
+  form.reset();
+});
+
+function tampilkan() {
+  list.innerHTML = "";
+  let totalAmount = 0;
+
+  let food = 0, transport = 0, fun = 0;
+
+  data.forEach((item, index) => {
+    totalAmount += item.amount;
+
+    if(item.category === "Food") food += item.amount;
+    if(item.category === "Transport") transport += item.amount;
+    if(item.category === "Fun") fun += item.amount;
+
+    const li = document.createElement("li");
+    li.innerHTML = `
+      ${item.name} - Rp ${item.amount} (${item.category})
+      <button onclick="hapus(${index})">❌</button>
+    `;
+    list.appendChild(li);
+  });
+
+  total.innerText = "Total: Rp " + totalAmount;
+
+  tampilChart(food, transport, fun);
+}
+
+function hapus(index) {
+  data.splice(index, 1);
+  localStorage.setItem("data", JSON.stringify(data));
+  tampilkan();
+}
+
+let chart;
+
+function tampilChart(food, transport, fun) {
+  const ctx = document.getElementById("chart");
+
+  if(chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["Food", "Transport", "Fun"],
+      datasets: [{
+        data: [food, transport, fun]
+      }]
+    }
+  });
+}
+
+// DARK MODE BONUS (double click layar)
+document.body.addEventListener("dblclick", () => {
+  document.body.classList.toggle("dark");
+});
+
+tampilkan();
+</script>
+
+</body>
+</html>
